@@ -17,9 +17,9 @@
                 "title": "Points"
             },
             "date": "Date",
-            "exercise": "Exercise",
-            "meals": "Meals",
-            "alcohol": "Alcohol",
+            "exercise": "hiciste ejercicio?",
+            "meals": "has comido bien?",
+            "alcohol": "tomaste responsablemente?",
             "notes": "Notes",
             "user": "User"
         }
