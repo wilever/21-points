@@ -21,6 +21,10 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
+import org.jhipster.health.repository.UserRepository;
+import org.jhipster.health.security.AuthoritiesConstants;
+import org.jhipster.health.security.SecurityUtils;
+
 /**
  * REST controller for managing Points.
  */
@@ -33,9 +37,15 @@ public class PointsResource {
     private static final String ENTITY_NAME = "points";
 
     private final PointsService pointsService;
-
+/*
     public PointsResource(PointsService pointsService) {
+        this.pointsService = pointsService;*/
+    private final UserRepository userRepository;
+    public PointsResource(
+        PointsService pointsService,
+        UserRepository userRepository) {
         this.pointsService = pointsService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -50,6 +60,10 @@ public class PointsResource {
         log.debug("REST request to save Points : {}", points);
         if (points.getId() != null) {
             throw new BadRequestAlertException("A new points cannot already have an ID", ENTITY_NAME, "idexists");
+        }
+        if (!SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
+            log.debug("No user passed in, using current user: {}", SecurityUtils.getCurrentUserLogin());
+            points.setUser(userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().orElse(null)).orElse(null));
         }
         Points result = pointsService.save(points);
         return ResponseEntity.created(new URI("/api/points/" + result.getId()))
