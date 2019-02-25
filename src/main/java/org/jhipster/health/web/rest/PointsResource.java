@@ -1,5 +1,6 @@
 package org.jhipster.health.web.rest;
 import org.jhipster.health.domain.Points;
+import org.jhipster.health.repository.PointsRepository;
 import org.jhipster.health.service.PointsService;
 import org.jhipster.health.web.rest.errors.BadRequestAlertException;
 import org.jhipster.health.web.rest.util.HeaderUtil;
@@ -36,14 +37,18 @@ public class PointsResource {
 
     private static final String ENTITY_NAME = "points";
 
+    private final PointsRepository pointsRepository;
+
     private final PointsService pointsService;
 /*
     public PointsResource(PointsService pointsService) {
         this.pointsService = pointsService;*/
     private final UserRepository userRepository;
     public PointsResource(
+        PointsRepository pointsRepository,
         PointsService pointsService,
         UserRepository userRepository) {
+        this.pointsRepository = pointsRepository;
         this.pointsService = pointsService;
         this.userRepository = userRepository;
     }
@@ -101,7 +106,12 @@ public class PointsResource {
     @GetMapping("/points")
     public ResponseEntity<List<Points>> getAllPoints(Pageable pageable) {
         log.debug("REST request to get a page of Points");
-        Page<Points> page = pointsService.findAll(pageable);
+        Page<Points> page;
+        if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
+            page = pointsRepository.findAllByOrderByDateDesc(pageable);
+        } else {
+            page = pointsRepository.findByUserIsCurrentUser(pageable);
+        }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/points");
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
