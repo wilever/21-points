@@ -38,7 +38,7 @@ Browser Upgrade Prompt
 Generic styles
 ========================================================================== */
 
-/* Error highlight on input fields */
+/* Error highlight on input fields 
 .ng-valid[required],
 .ng-valid.required {
     border-left: 5px solid green;
@@ -46,7 +46,7 @@ Generic styles
 
 .ng-invalid:not(form) {
     border-left: 5px solid red;
-}
+}*/
 
 /* other generic styles */
 
@@ -221,6 +221,16 @@ ui bootstrap tweaks
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+// dropdown-menu
+.dropdown-menu .dropdown-item.active,
+.dropdown-menu .dropdown-item:active {
+    color: #fff !important;
+}
+.dropdown-menu .dropdown-item {
+    display: inline-block !important;
+    padding: 0.5rem 1.5rem !important;
+    min-height: 2rem !important;
 }
 
 /* jhipster-needle-scss-add-global JHipster will add new css style */
