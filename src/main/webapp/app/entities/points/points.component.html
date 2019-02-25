@@ -8,6 +8,19 @@
             </span>
         </button>
     </h2>
+    <form name="searchForm" class="form-inline">
+        <div class="input-group w-100 mr-1">
+        <input type="text" class="form-control" [(ngModel)]="currentSearch"
+        id="currentSearch" name="currentSearch"
+        placeholder="{{ 'twentyOnePointsApp.points.home.search' | translate }}">
+        <button class="input-group-append btn btn-info" (click)="search(currentSearch)">
+        <fa-icon [icon]="'search'"></fa-icon>
+        </button>
+        <button class="input-group-append btn btn-danger" (click)="clear()" *ngIf="currentSearch">
+        <fa-icon [icon]="'trash-alt'"></fa-icon>
+        </button>
+        </div>
+    </form>
     <jhi-alert></jhi-alert>
     <br/>
     <div class="table-responsive" *ngIf="points">
