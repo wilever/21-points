@@ -3,9 +3,12 @@ import { RouterModule } from '@angular/router';
 
 import { TwentyOnePointsSharedModule } from 'app/shared';
 import { HOME_ROUTE, HomeComponent } from './';
+import { NvD3Module } from 'ng2-nvd3';
+import 'd3';
+import 'nvd3';
 
 @NgModule({
-    imports: [TwentyOnePointsSharedModule, RouterModule.forChild([HOME_ROUTE])],
+    imports: [TwentyOnePointsSharedModule, NvD3Module, RouterModule.forChild([HOME_ROUTE])],
     declarations: [HomeComponent],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

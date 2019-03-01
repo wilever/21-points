@@ -49,6 +49,25 @@ export class PointsService {
         return this.http.delete<any>(`${this.resourceUrl}/${id}`, { observe: 'response' });
     }
 
+    thisWeek(): Observable<EntityResponseType> {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return this.http
+            .get(`api/points-this-week?tz=${tz}`, { observe: 'response' })
+            .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+    }
+
+    byWeek(date: string): Observable<EntityResponseType> {
+        return this.http
+            .get(`api/points-by-week/${date}`, { observe: 'response' })
+            .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+    }
+
+    byMonth(month: string): Observable<EntityResponseType> {
+        return this.http
+            .get(`api/points-by-month/${month}`, { observe: 'response' })
+            .pipe(map((res: EntityResponseType) => this.convertDateFromServer(res)));
+    }
+
     protected convertDateFromClient(points: IPoints): IPoints {
         const copy: IPoints = Object.assign({}, points, {
             date: points.date != null && points.date.isValid() ? points.date.format(DATE_FORMAT) : null

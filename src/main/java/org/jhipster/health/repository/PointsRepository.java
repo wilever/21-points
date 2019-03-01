@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -20,5 +21,7 @@ public interface PointsRepository extends JpaRepository<Points, Long> {
     Page<Points> findByUserIsCurrentUser(Pageable pageable);
 
     Page<Points> findAllByOrderByDateDesc(Pageable pageable);
+
+    List<Points> findAllByDateBetweenAndUserLogin(LocalDate firstDate, LocalDate secondDate, String login);
 
 }

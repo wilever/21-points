@@ -76,7 +76,7 @@ public class PreferencesResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final PreferencesResource preferencesResource = new PreferencesResource(preferencesService);
+        final PreferencesResource preferencesResource = new PreferencesResource(preferencesRepository, preferencesService);
         this.restPreferencesMockMvc = MockMvcBuilders.standaloneSetup(preferencesResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

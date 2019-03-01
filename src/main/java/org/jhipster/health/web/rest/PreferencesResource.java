@@ -1,12 +1,18 @@
 package org.jhipster.health.web.rest;
 import org.jhipster.health.domain.Preferences;
+import org.jhipster.health.domain.User;
 import org.jhipster.health.service.PreferencesService;
+import org.jhipster.health.repository.PreferencesRepository;
+import org.jhipster.health.repository.UserRepository;
+import org.jhipster.health.security.AuthoritiesConstants;
+import org.jhipster.health.security.SecurityUtils;
+import io.github.jhipster.web.util.ResponseUtil;
 import org.jhipster.health.web.rest.errors.BadRequestAlertException;
 import org.jhipster.health.web.rest.util.HeaderUtil;
-import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -29,7 +35,10 @@ public class PreferencesResource {
 
     private final PreferencesService preferencesService;
 
-    public PreferencesResource(PreferencesService preferencesService) {
+    private final PreferencesRepository preferencesRepository;
+
+    public PreferencesResource(PreferencesRepository preferencesRepository, PreferencesService preferencesService) {
+        this.preferencesRepository = preferencesRepository;
         this.preferencesService = preferencesService;
     }
 
@@ -82,6 +91,24 @@ public class PreferencesResource {
     public List<Preferences> getAllPreferences() {
         log.debug("REST request to get all Preferences");
         return preferencesService.findAll();
+    }
+
+    /**
+     * GET  /my-preferences -> get the current user's preferences.
+     */
+    @GetMapping("/my-preferences")
+    public ResponseEntity<Preferences> getUserPreferences() {
+        String username = SecurityUtils.getCurrentUserLogin().orElse(null);
+        log.debug("REST request to get Preferences : {}", username);
+        Optional<Preferences> preferences = preferencesRepository.findOneByUserLogin(username);
+
+        if (preferences.isPresent()) {
+            return new ResponseEntity<>(preferences.get(), HttpStatus.OK);
+        } else {
+            Preferences defaultPreferences = new Preferences();
+            defaultPreferences.setWeeklyGoal(10); // default
+            return new ResponseEntity<>(defaultPreferences, HttpStatus.OK);
+        }
     }
 
     /**
