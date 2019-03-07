@@ -5,6 +5,8 @@ import { Subscription } from 'rxjs';
 import { PointsService } from 'app/entities/points';
 import { PreferencesService } from 'app/entities/preferences';
 import { Preferences } from 'app/shared/model/preferences.model';
+import { BloodPressureService } from 'app/entities/blood-pressure';
+import { D3ChartService } from './d3-chart.service';
 
 import { LoginModalService, AccountService, Account } from 'app/core';
 
@@ -16,6 +18,9 @@ import { LoginModalService, AccountService, Account } from 'app/core';
 export class HomeComponent implements OnInit, OnDestroy {
     account: Account;
     modalRef: NgbModalRef;
+    bpReadings: any = {};
+    bpOptions: any;
+    bpData: any;
     eventSubscriber: Subscription;
     pointsThisWeek: any = {};
     pointsPercentage: number;
@@ -26,6 +31,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         private loginModalService: LoginModalService,
         private eventManager: JhiEventManager,
         private preferencesService: PreferencesService,
+        private bloodPressureService: BloodPressureService,
         private pointsService: PointsService
     ) {}
 
@@ -80,6 +86,51 @@ export class HomeComponent implements OnInit, OnDestroy {
                     this.pointsThisWeek.progress = 'warning';
                 }
             });
+        });
+
+        // Get blood pressure readings for the last 30 days
+        this.bloodPressureService.last30Days().subscribe((bpReadings: any) => {
+            bpReadings = bpReadings.body;
+            this.bpReadings = bpReadings;
+            // https://stackoverflow.com/a/34694155/65681
+            this.bpOptions = { ...D3ChartService.getChartConfig() };
+            if (bpReadings.readings.length) {
+                this.bpOptions.title.text = bpReadings.period;
+                this.bpOptions.chart.yAxis.axisLabel = 'Blood Pressure';
+                let systolics, diastolics, upperValues, lowerValues;
+                systolics = [];
+                diastolics = [];
+                upperValues = [];
+                lowerValues = [];
+                bpReadings.readings.forEach(item => {
+                    systolics.push({
+                        x: new Date(item.timestamp),
+                        y: item.systolic
+                    });
+                    diastolics.push({
+                        x: new Date(item.timestamp),
+                        y: item.diastolic
+                    });
+                    upperValues.push(item.systolic);
+                    lowerValues.push(item.diastolic);
+                });
+                this.bpData = [
+                    {
+                        values: systolics,
+                        key: 'Systolic',
+                        color: '#673ab7'
+                    },
+                    {
+                        values: diastolics,
+                        key: 'Diastolic',
+                        color: '#03a9f4'
+                    }
+                ];
+                // set y scale to be 10 more than max and min
+                this.bpOptions.chart.yDomain = [Math.min.apply(Math, lowerValues) - 10, Math.max.apply(Math, upperValues) + 10];
+            } else {
+                this.bpReadings.readings = [];
+            }
         });
     }
 

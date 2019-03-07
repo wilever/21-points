@@ -4,6 +4,7 @@ import org.jhipster.health.TwentyOnePointsApp;
 
 import org.jhipster.health.domain.Preferences;
 import org.jhipster.health.repository.PreferencesRepository;
+import org.jhipster.health.repository.PreferencesRepository;
 import org.jhipster.health.service.PreferencesService;
 import org.jhipster.health.web.rest.errors.ExceptionTranslator;
 
@@ -76,7 +77,7 @@ public class PreferencesResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final PreferencesResource preferencesResource = new PreferencesResource(preferencesService);
+        final PreferencesResource preferencesResource = new PreferencesResource(preferencesRepository, preferencesService);
         this.restPreferencesMockMvc = MockMvcBuilders.standaloneSetup(preferencesResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

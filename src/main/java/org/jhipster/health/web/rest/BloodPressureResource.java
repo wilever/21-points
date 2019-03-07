@@ -1,9 +1,12 @@
 package org.jhipster.health.web.rest;
 import org.jhipster.health.domain.BloodPressure;
 import org.jhipster.health.service.BloodPressureService;
+import org.jhipster.health.repository.BloodPressureRepository;
+import org.jhipster.health.security.SecurityUtils;
 import org.jhipster.health.web.rest.errors.BadRequestAlertException;
 import org.jhipster.health.web.rest.util.HeaderUtil;
 import org.jhipster.health.web.rest.util.PaginationUtil;
+import org.jhipster.health.web.rest.vm.BloodPressureByPeriod;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +15,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.YearMonth;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,7 +43,10 @@ public class BloodPressureResource {
 
     private final BloodPressureService bloodPressureService;
 
-    public BloodPressureResource(BloodPressureService bloodPressureService) {
+    private final BloodPressureRepository bloodPressureRepository;
+
+    public BloodPressureResource(BloodPressureRepository bloodPressureRepository, BloodPressureService bloodPressureService) {
+        this.bloodPressureRepository = bloodPressureRepository;
         this.bloodPressureService = bloodPressureService;
     }
 
@@ -90,6 +102,42 @@ public class BloodPressureResource {
         Page<BloodPressure> page = bloodPressureService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/blood-pressures");
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+     /**
+     * GET  /bp-by-days : get all the blood pressure readings by last x days.
+     */
+    @GetMapping("/bp-by-days/{days}")
+    public ResponseEntity<BloodPressureByPeriod> getByDays(@PathVariable int days) {
+        ZonedDateTime rightNow = ZonedDateTime.now(ZoneOffset.UTC);
+        ZonedDateTime daysAgo = rightNow.minusDays(days);
+
+        List<BloodPressure> readings =
+            bloodPressureRepository.findAllByTimestampBetweenAndUserLoginOrderByTimestampDesc(
+                daysAgo, rightNow, SecurityUtils.getCurrentUserLogin().orElse(null));
+        BloodPressureByPeriod response = new BloodPressureByPeriod("Last " + days + " Days", readings);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * GET  /bp-by-month : get all the blood pressure readings for a particular month.
+     */
+    @GetMapping("/bp-by-month/{date}")
+    public ResponseEntity<BloodPressureByPeriod> getByMonth(@PathVariable @DateTimeFormat(pattern = "yyyy-MM") YearMonth date) {
+        LocalDate firstDay = date.atDay(1);
+        LocalDate lastDay = date.atEndOfMonth();
+
+        ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneOffset.UTC);
+
+        List<BloodPressure> readings = bloodPressureRepository.
+            findAllByTimestampBetweenAndUserLoginOrderByTimestampDesc(firstDay.atStartOfDay(zonedDateTime.getZone()),
+                lastDay.plusDays(1).atStartOfDay(zonedDateTime.getZone()), SecurityUtils.getCurrentUserLogin().orElse(null));
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM");
+        String yearAndMonth = fmt.format(firstDay);
+
+        BloodPressureByPeriod response = new BloodPressureByPeriod(yearAndMonth, readings);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**
