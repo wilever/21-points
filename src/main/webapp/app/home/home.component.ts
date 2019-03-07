@@ -3,6 +3,8 @@ import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { JhiEventManager } from 'ng-jhipster';
 import { Subscription } from 'rxjs';
 import { PointsService } from 'app/entities/points';
+import { PreferencesService } from 'app/entities/preferences';
+import { Preferences } from 'app/shared/model/preferences.model';
 
 import { LoginModalService, AccountService, Account } from 'app/core';
 
@@ -17,18 +19,22 @@ export class HomeComponent implements OnInit, OnDestroy {
     eventSubscriber: Subscription;
     pointsThisWeek: any = {};
     pointsPercentage: number;
+    preferences: Preferences;
 
     constructor(
         private accountService: AccountService,
         private loginModalService: LoginModalService,
         private eventManager: JhiEventManager,
+        private preferencesService: PreferencesService,
         private pointsService: PointsService
     ) {}
 
     ngOnInit() {
         this.accountService.identity().then((account: Account) => {
             this.account = account;
-            this.getUserData();
+            if (this.isAuthenticated()) {
+                this.getUserData();
+            }
         });
         this.registerAuthenticationSuccess();
     }
@@ -55,11 +61,25 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     getUserData() {
-        // Get points for the current week
-        this.pointsService.thisWeek().subscribe((points: any) => {
-            points = points.body;
-            this.pointsThisWeek = points;
-            this.pointsPercentage = (points.points / 21) * 100;
+        // Get preferences
+        this.preferencesService.user().subscribe((preferences: any) => {
+            this.preferences = preferences.body;
+
+            // Get points for the current week
+            this.pointsService.thisWeek().subscribe((points: any) => {
+                points = points.body;
+                this.pointsThisWeek = points;
+                this.pointsPercentage = (points.points / this.preferences.weeklyGoal) * 100;
+
+                // calculate success, warning, or danger
+                if (points.points >= preferences.weeklyGoal) {
+                    this.pointsThisWeek.progress = 'success';
+                } else if (points.points < 10) {
+                    this.pointsThisWeek.progress = 'danger';
+                } else if (points.points > 10 && points.points < this.preferences.weeklyGoal) {
+                    this.pointsThisWeek.progress = 'warning';
+                }
+            });
         });
     }
 

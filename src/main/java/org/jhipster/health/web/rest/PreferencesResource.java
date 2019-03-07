@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.jhipster.health.security.SecurityUtils;
+import org.jhipster.health.repository.PreferencesRepository;
+import org.springframework.http.HttpStatus;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -26,10 +29,13 @@ public class PreferencesResource {
     private final Logger log = LoggerFactory.getLogger(PreferencesResource.class);
 
     private static final String ENTITY_NAME = "preferences";
+    
+    private final PreferencesRepository preferencesRepository;
 
     private final PreferencesService preferencesService;
 
-    public PreferencesResource(PreferencesService preferencesService) {
+    public PreferencesResource(PreferencesRepository preferencesRepository, PreferencesService preferencesService) {
+        this.preferencesRepository = preferencesRepository;
         this.preferencesService = preferencesService;
     }
 
@@ -82,6 +88,24 @@ public class PreferencesResource {
     public List<Preferences> getAllPreferences() {
         log.debug("REST request to get all Preferences");
         return preferencesService.findAll();
+    }
+    
+    /**
+     * GET  /my-preferences -> get the current user's preferences.
+     */
+    @GetMapping("/my-preferences")
+    public ResponseEntity<Preferences> getUserPreferences() {
+        String username = SecurityUtils.getCurrentUserLogin().orElse(null);
+        log.debug("REST request to get Preferences : {}", username);
+        Optional<Preferences> preferences = preferencesRepository.findOneByUserLogin(username);
+
+        if (preferences.isPresent()) {
+            return new ResponseEntity<>(preferences.get(), HttpStatus.OK);
+        } else {
+            Preferences defaultPreferences = new Preferences();
+            defaultPreferences.setWeeklyGoal(10); // default
+            return new ResponseEntity<>(defaultPreferences, HttpStatus.OK);
+        }
     }
 
     /**
